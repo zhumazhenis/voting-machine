@@ -1,12 +1,27 @@
+#include <LiquidCrystal.h>
+
+// for LCD
+const int rs = 2, en = 3, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
 void setup() {
-  // initialize digital pin LED_BUILTIN as an output.
-  pinMode(LED_BUILTIN, OUTPUT);
+  
+  // set up the LCD's number of columns and rows:
+  lcd.begin(16, 2);
+  
+  // Print a message to the LCD.
+  lcd.print("Tako Bratiwka");
+  
+  Serial.print("Initializing card.");
 }
 
-// the loop function runs over and over again forever
 void loop() {
-  digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
-  delay(5000);                       // wait for a second
-  digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
-  delay(5000);                       // wait for a second
+  
+  // set the cursor to column 0, line 1
+  // (note: line 1 is the second row, since counting begins with 0):
+  lcd.setCursor(0, 1);
+  
+  // print the number of seconds since reset:
+  lcd.print("Salamaleikum!");
+  
 }
