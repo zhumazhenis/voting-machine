@@ -1,26 +1,22 @@
-#include <LiquidCrystal.h>
+#include <LiquidCrystal_I2C.h>
 #include <Keypad.h>
 
 
 // for LCD
-const int rs = 2, en = 3, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
-LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+LiquidCrystal_I2C lcd(0x3F, 16, 2);
 
 // for Keypad
 const byte ROWS = 2;
 const byte COLS = 4;
-
 byte rowPins[ROWS] = {8, 9};
 byte colPins[COLS] = {10, 11, 12, 13};
-
 char hexaKeys[ROWS][COLS] = {
   {'A', 'B', 'C', 'D'},
   {'1', 'L', 'R', '0'}
 };
-
-void welcomePage(LiquidCrystal &lcd);
-
 Keypad keypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
+
+void welcomePage(LiquidCrystal_I2C &lcd);
 
 
 // stores voting result
@@ -43,10 +39,10 @@ class Block {
 // block for showing result
 class ResultBlock: public Block {
   public:
-    LiquidCrystal* lcd;
+    LiquidCrystal_I2C* lcd;
     Result* result;
 
-    ResultBlock(LiquidCrystal* lcd, Result* result) {
+    ResultBlock(LiquidCrystal_I2C* lcd, Result* result) {
       this->name = (char*)"Result Block";
       this->lcd = lcd;
       this->result = result;
@@ -76,10 +72,10 @@ class ResultBlock: public Block {
 // block for voting
 class VoteBlock: public Block {
   public:
-    LiquidCrystal* lcd;
+    LiquidCrystal_I2C* lcd;
     Result* result;
 
-    VoteBlock(LiquidCrystal* lcd, Result* result) {
+    VoteBlock(LiquidCrystal_I2C* lcd, Result* result) {
       this->name = (char*)"Vote Block";
       this->lcd = lcd;
       this->result = result;
@@ -129,13 +125,13 @@ class VoteBlock: public Block {
 // main menu
 class App: public Block {
   public:
-    LiquidCrystal* lcd;
+    LiquidCrystal_I2C* lcd;
     Result* result;
     Block* blocks[2];
     int currentBlockIndex;
     int activeBlockIndex;
 
-    App(LiquidCrystal* lcd) {
+    App(LiquidCrystal_I2C* lcd) {
       this->name = (char*)"App Block";
       this->lcd = lcd;
       Result* result = new Result();
@@ -175,7 +171,6 @@ class App: public Block {
       }
 
       draw();
-
       return 0;
     }
 
@@ -185,7 +180,6 @@ class App: public Block {
       lcd->setCursor(0, 1);
       lcd->print("OK    <  >   ");
     }
-
 };
 
 // app created
@@ -195,26 +189,25 @@ void setup() {
 
   Serial.begin(9600);
 
-  // set up the LCD's number of columns and rows:
-  lcd.begin(16, 2);
+  lcd.init();
+  lcd.backlight();
   welcomePage(lcd);
   app.draw();
 }
 
 void loop() {
 
+  // read from keypad
   char key = keypad.getKey();
-  
+
   // check keypad pressed or not
   if (keypad.keyStateChanged()) {
-    // read from keypad
     app.process(key);
   }
-  
 }
 
 // welcome page
-void welcomePage(LiquidCrystal &lcd) {
+void welcomePage(LiquidCrystal_I2C &lcd) {
 
   for (char c : " VOTING-MACHINE") {
     if (c) {
