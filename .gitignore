@@ -1,0 +1,4 @@
+.idea/
+bitbucket-pipelines.yml
+target/
+em.iml
