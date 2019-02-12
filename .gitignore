@@ -2,3 +2,7 @@
 bitbucket-pipelines.yml
 target/
 em.iml
+.gradle
+gradle
+build/
+out/
