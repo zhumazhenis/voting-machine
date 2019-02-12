@@ -1,4 +1,4 @@
-package edu.nu.em.dto;
+package edu.nu.em.model.dto;
 
 
 public class SkillDto {

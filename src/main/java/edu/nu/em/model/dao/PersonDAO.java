@@ -1,10 +1,10 @@
 package edu.nu.em.model.dao;
 
-import edu.nu.em.model.User;
+import edu.nu.em.model.Person;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 
 @Repository
-public interface UserDAO extends JpaRepository<User, Integer>{
+public interface PersonDAO extends JpaRepository<Person, Integer> {
 }

@@ -1,22 +1,22 @@
 package edu.nu.em.converter;
 
-import java.util.stream.Collectors;
+import edu.nu.em.model.dto.PersonDto;
+import edu.nu.em.model.Person;
 
-import edu.nu.em.dto.UserDto;
-import edu.nu.em.model.User;
+import java.util.stream.Collectors;
 
 
 public class UserConverter {
-  public static User dtoToEntity(UserDto userDto) {
-    User user = new User(userDto.getUserName(), null);
-    user.setUserId(userDto.getUserId());
-    user.setSkills(userDto.getSkillDtos().stream().map(SkillConverter::dtoToEntity).collect(Collectors.toList()));
-    return user;
+  public static Person dtoToEntity(PersonDto personDto) {
+    Person person = new Person();
+    person.setName(personDto.getUserName());
+    person.setSkills(personDto.getSkillDtos().stream().map(SkillConverter::dtoToEntity).collect(Collectors.toList()));
+    return person;
   }
 
-  public static UserDto entityToDto(User user) {
-    UserDto userDto = new UserDto(user.getUserId(), user.getUserName(), null);
-    userDto.setSkillDtos(user.getSkills().stream().map(SkillConverter::entityToDto).collect(Collectors.toList()));
-    return userDto;
+  public static PersonDto entityToDto(Person person) {
+    PersonDto personDto = new PersonDto(person.getId(), person.getName(), null);
+    personDto.setSkillDtos(person.getSkills().stream().map(SkillConverter::entityToDto).collect(Collectors.toList()));
+    return personDto;
   }
 }

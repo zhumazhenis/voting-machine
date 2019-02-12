@@ -1,55 +1,46 @@
 package edu.nu.em.model;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 
 @Entity
-public class Skill {
+@Table(name = "skill")
+public class Skill implements Serializable {
 
-  @Column
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  private static final long serialVersionUID = 0x63A6DA99AABDA8A8L;
+
+  private Integer id;
+  private String name;
+  private Person person;
+
   @Id
-  private Integer skillId;
-
-  @Column
-  private String skillName;
-
-  @ManyToOne
-  private User user;
-
-  public Skill(String skillName) {
-    this.skillName = skillName;
+  @GeneratedValue
+  @Column(name = "id_")
+  public Integer getId() {
+    return id;
   }
 
-  public Integer getSkillId() {
-    return skillId;
+  @Column(name = "name_")
+  public String getName() {
+    return name;
   }
 
-  public void setSkillId(Integer skillId) {
-    this.skillId = skillId;
+  @ManyToOne(fetch = FetchType.EAGER, targetEntity = Person.class, cascade = CascadeType.ALL)
+  @JoinColumn(name = "person_id_")
+  public Person getPerson() {
+    return person;
   }
 
-  public String getSkillName() {
-    return skillName;
+  public void setId(Integer id) {
+    this.id = id;
   }
 
-  public void setSkillName(String skillName) {
-    this.skillName = skillName;
+  public void setName(String name) {
+    this.name = name;
   }
 
-  public User getUser() {
-    return user;
-  }
-
-  public void setUser(User user) {
-    this.user = user;
-  }
-
-  public Skill() {
-  }
-
-  public Skill(String skillName, User user) {
-    this.skillName = skillName;
-    this.user = user;
+  public void setPerson(Person person) {
+    this.person = person;
   }
 }

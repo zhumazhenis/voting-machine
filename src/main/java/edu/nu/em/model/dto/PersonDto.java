@@ -1,21 +1,21 @@
-package edu.nu.em.dto;
+package edu.nu.em.model.dto;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class UserDto {
+public class PersonDto {
   Integer userId;
   String userName;
   List<SkillDto> skillDtos = new ArrayList<>();
 
-  public UserDto(Integer userId, String userName, List<SkillDto> skillDtos) {
+  public PersonDto(Integer userId, String userName, List<SkillDto> skillDtos) {
     this.userId = userId;
     this.userName = userName;
     this.skillDtos = skillDtos;
   }
 
-  public UserDto() {
+  public PersonDto() {
   }
 
   public Integer getUserId() {

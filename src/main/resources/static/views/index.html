@@ -8,7 +8,7 @@
 <hr/>
 <div class="container" ng-controller="UserController">
     <div class="row">
-        <label>User</label> <input type="text" ng-model="userDto.userName" class="input-sm spacing"/>
+        <label>User</label> <input type="text" ng-model="personDto.userName" class="input-sm spacing"/>
         <label>Skills</label> <input type="text" ng-model="skills" ng-list class="input-sm custom-width spacing"
                                      placeholder="use comma to separate skills"/>
         <button ng-click="saveUser()" class="btn btn-sm btn-info">Save User</button>
@@ -18,10 +18,10 @@
         <p>{{allUsers | json}}</p>
     </div>
     <hr/>
-    <div class="row" ng-repeat="user in allUsers">
+    <div class="row" ng-repeat="person in allUsers">
         <div class="">
-            <h3>{{user.userName}}</h3>
-            <span ng-repeat="skill in user.skillDtos" class="spacing">{{skill.skillName}}</span>
+            <h3>{{person.userName}}</h3>
+            <span ng-repeat="skill in person.skillDtos" class="spacing">{{skill.skillName}}</span>
         </div>
     </div>
 </div>

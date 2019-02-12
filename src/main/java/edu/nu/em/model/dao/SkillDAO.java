@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 
 @Repository
-public interface SkillDAO extends JpaRepository<Skill, Integer>{
+public interface SkillDAO extends JpaRepository<Skill, Integer> {
 }
