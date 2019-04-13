@@ -8,8 +8,8 @@ LiquidCrystal_I2C lcd(0x3F, 16, 2);
 // for Keypad
 const byte ROWS = 2;
 const byte COLS = 4;
-byte rowPins[ROWS] = {8, 9};
-byte colPins[COLS] = {10, 11, 12, 13};
+byte rowPins[ROWS] = {3, 2};
+byte colPins[COLS] = {4, 5, 6, 7};
 char hexaKeys[ROWS][COLS] = {
   {'A', 'B', 'C', 'D'},
   {'1', 'L', 'R', '0'}
