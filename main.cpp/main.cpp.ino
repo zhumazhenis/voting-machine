@@ -127,7 +127,8 @@ class App: public Block {
   public:
     LiquidCrystal_I2C* lcd;
     Result* result;
-    Block* blocks[2];
+    static int const numberOfBlocks = 2;
+    Block* blocks[numberOfBlocks];
     int currentBlockIndex;
     int activeBlockIndex;
 
@@ -161,12 +162,16 @@ class App: public Block {
       if (key == 'L') {
         if (currentBlockIndex > 0) {
           currentBlockIndex--;
+        } else {
+          currentBlockIndex = numberOfBlocks - 1;
         }
       }
 
       if (key == 'R') {
-        if (currentBlockIndex < 1) {
+        if (currentBlockIndex < numberOfBlocks - 1) {
           currentBlockIndex++;
+        } else {
+          currentBlockIndex = 0;
         }
       }
 
