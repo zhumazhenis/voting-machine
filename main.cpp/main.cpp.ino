@@ -1,9 +1,12 @@
 #include <LiquidCrystal_I2C.h>
 #include <Keypad.h>
+#include <SPI.h>
+#include <MFRC522.h>
 
 
 // for LCD
 LiquidCrystal_I2C lcd(0x3F, 16, 2);
+
 
 // for Keypad
 const byte ROWS = 2;
@@ -16,6 +19,14 @@ char hexaKeys[ROWS][COLS] = {
 };
 Keypad keypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
 
+
+// for RFID card reader
+const byte SS_PIN = 10;
+const byte RST_PIN = 9;
+MFRC522 mfrc522(SS_PIN, RST_PIN);
+
+
+// welcome page
 void welcomePage(LiquidCrystal_I2C &lcd);
 
 
@@ -194,8 +205,17 @@ void setup() {
 
   Serial.begin(9600);
 
+  // for RFID
+  SPI.begin();      // Initiate  SPI bus
+  mfrc522.PCD_Init();   // Initiate MFRC522
+  Serial.println("Approximate your card to the reader...");
+  Serial.println();
+
+  // lcd initialization
   lcd.init();
   lcd.backlight();
+
+  // welcome page
   welcomePage(lcd);
   app.draw();
 }
@@ -208,6 +228,39 @@ void loop() {
   // check keypad pressed or not
   if (keypad.keyStateChanged()) {
     app.process(key);
+  }
+
+  // for RFID
+  // Look for new cards
+  if (!mfrc522.PICC_IsNewCardPresent()) {
+    return;
+  }
+
+  // Select one of the cards
+  if (!mfrc522.PICC_ReadCardSerial()) {
+    return;
+  }
+
+  // Show UID on serial monitor
+  Serial.print("UID tag :");
+  String content = "";
+  byte letter;
+  for (int i = 0; i < mfrc522.uid.size; i++) {
+    Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
+    Serial.print(mfrc522.uid.uidByte[i], HEX);
+    content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
+    content.concat(String(mfrc522.uid.uidByte[i], HEX));
+  }
+  Serial.println();
+  Serial.print("Message : ");
+  content.toUpperCase();
+  if (content.substring(1) == "80 38 94 1A") { //change here the UID of the card/cards that you want to give access
+    Serial.println("Authorized access");
+    Serial.println();
+    delay(3000);
+  } else {
+    Serial.println("Access denied");
+    delay(3000);
   }
 }
 
