@@ -84,11 +84,13 @@ class ResultBlock: public Block {
 class VoteBlock: public Block {
   public:
     LiquidCrystal_I2C* lcd;
+    MFRC522* mfrc522;
     Result* result;
 
-    VoteBlock(LiquidCrystal_I2C* lcd, Result* result) {
+    VoteBlock(LiquidCrystal_I2C* lcd, MFRC522* mfrc522, Result* result) {
       this->name = (char*)"Vote Block";
       this->lcd = lcd;
+      this->mfrc522 = mfrc522;
       this->result = result;
     }
 
@@ -143,12 +145,12 @@ class App: public Block {
     int currentBlockIndex;
     int activeBlockIndex;
 
-    App(LiquidCrystal_I2C* lcd) {
+    App(LiquidCrystal_I2C* lcd, MFRC522* mfrc522) {
       this->name = (char*)"App Block";
       this->lcd = lcd;
       Result* result = new Result();
       this->result = result;
-      this->blocks[0] = new VoteBlock(lcd, result);
+      this->blocks[0] = new VoteBlock(lcd, mfrc522, result);
       this->blocks[1] = new ResultBlock(lcd, result);
       this->currentBlockIndex = 0;
       this->activeBlockIndex = -1;
@@ -171,7 +173,7 @@ class App: public Block {
       }
 
       if (key == 'L') {
-        if (currentBlockIndex > 0) {
+        if (0 < currentBlockIndex) {
           currentBlockIndex--;
         } else {
           currentBlockIndex = numberOfBlocks - 1;
@@ -199,7 +201,7 @@ class App: public Block {
 };
 
 // app created
-App app(&lcd);
+App app(&lcd, &mfrc522);
 
 void setup() {
 
