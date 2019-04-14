@@ -4,11 +4,37 @@
 #include <MFRC522.h>
 #include <ArduinoSTL.h>
 #include <vector>
+#include <set>
 #include <map>
+#include <utility>
+#include <iterator>
 
 
-std::vector<int> vv;
-std::map<String, String> mm;
+struct cmp_str {
+   bool operator() (char const *a, char const *b) const {
+      return strcmp(a, b) < 0;
+   }
+};
+
+
+// Database of card and names
+std::map<char*, char*, cmp_str> db = {
+  {"a", "a_zhuma\n"}, 
+  {"b", "b_zhuma\n"},
+  {"c", "c_zhuma\n"},
+  {"d", "d_zhuma\n"},
+  {"e", "e_zhuma\n"},
+  {"f", "f_zhuma\n"},
+  {"g", "g_zhuma\n"},
+  {"h", "h_zhuma\n"},
+  {"i", "i_zhuma\n"},
+  {"j", "j_zhuma\n"},
+  {"k", "k_zhuma\n"},
+  {"l", "l_zhuma\n"},
+  {"m", "m_zhuma\n"},
+  {"n", "n_zhuma\n"}
+};
+
 
 // LCD configuration
 LiquidCrystal_I2C lcd(0x3F, 16, 2);
@@ -39,10 +65,10 @@ void welcomePage(LiquidCrystal_I2C &lcd);
 // stores voting result
 class Result {
   public:
-    int a;
-    int b;
-    int c;
-    int d;
+    std::set<const char*, cmp_str> a;
+    std::set<const char*, cmp_str> b;
+    std::set<const char*, cmp_str> c;
+    std::set<const char*, cmp_str> d;
 };
 
 // abstract UI component
@@ -50,7 +76,7 @@ class Block {
   public:
     char* name;
     virtual int processKey(char key) = 0;
-    virtual int processRfid(String uid) = 0;
+    virtual int processRfid(const char* uid) = 0;
     virtual void draw() = 0;
 };
 
@@ -73,7 +99,7 @@ class ResultBlock: public Block {
       return 1;
     }
 
-    int processRfid(String uid) override {
+    int processRfid(const char* uid) override {
       return 1;
     }
 
@@ -81,60 +107,161 @@ class ResultBlock: public Block {
       lcd->clear();
       lcd->print("(A) (B) (C) (D)");
       lcd->setCursor(0, 1);
-      lcd->print(result->a);
+      lcd->print(result->a.size());
       lcd->setCursor(4, 1);
-      lcd->print(result->b);
+      lcd->print(result->b.size());
       lcd->setCursor(8, 1);
-      lcd->print(result->c);
+      lcd->print(result->c.size());
       lcd->setCursor(12, 1);
-      lcd->print(result->d);
+      lcd->print(result->d.size());
     }
 };
 
-// block for voting
-class VoteBlock: public Block {
+
+// block VoteBlockRfid
+class VoteBlockRfid: public Block {
   public:
     LiquidCrystal_I2C* lcd;
-    MFRC522* mfrc522;
     Result* result;
+    char candidate;
 
-
-    VoteBlock(LiquidCrystal_I2C* lcd, MFRC522* mfrc522, Result* result) {
+    VoteBlockRfid(LiquidCrystal_I2C* lcd, Result* result) {
       this->name = (char*)"Vote Block";
       this->lcd = lcd;
-      this->mfrc522 = mfrc522;
       this->result = result;
+    }
+
+    void setCandidate(char candidate) {
+      this->candidate = candidate;
     }
 
     int processKey(char key) override {
       if (key == '0') {
         return 0;
       }
+      return 1;
+    }
+
+    int processRfid(const char* uid) override {
+      
+      if (candidate == 'A') {
+        this->result->a.insert(uid);
+        popUpMessage(uid);
+      }
+
+      if (candidate == 'B') {
+        this->result->b.insert(uid);
+        popUpMessage(uid);
+      }
+
+      if (candidate == 'C') {
+        this->result->c.insert(uid);
+        popUpMessage(uid);
+      }
+
+      if (candidate == 'D') {
+        this->result->d.insert(uid);
+        popUpMessage(uid);
+      }
+      return 0;
+    }
+
+    void draw() override {
+      lcd->clear();
+      lcd->print('(');
+      lcd->print(candidate);
+      lcd->print(')');
+      lcd->print(" Put your ID!");
+      lcd->setCursor(0, 1);
+      lcd->print("            BACK");
+    }
+
+  private:
+    void popUpMessage(const char* uid) {
+      lcd->clear();
+      lcd->print(uid);
+      lcd->setCursor(0, 1);
+      lcd->print(candidate);
+      delay(1000);
+//      draw();
+    }
+};
+
+
+// block for voting
+class VoteBlock: public Block {
+  public:
+    LiquidCrystal_I2C* lcd;
+    Result* result;
+    VoteBlockRfid* voteBlockRfid;
+    boolean isVoteBlockRfidActive;
+
+    VoteBlock(LiquidCrystal_I2C* lcd, Result* result) {
+      this->name = (char*)"Vote Block";
+      this->lcd = lcd;
+      this->result = result;
+      this->voteBlockRfid = new VoteBlockRfid(lcd, result);
+      this->isVoteBlockRfidActive = false;
+    }
+
+    int processKey(char key) override {
+
+      if (this->isVoteBlockRfidActive) {
+        int res = this->voteBlockRfid->processKey(key);
+        if (res == 0) {
+          this->draw();
+          this->isVoteBlockRfidActive = false;
+        }
+        return 1;
+      }
       
       if (key == 'A') {
-        result->a++;
-        popUpMessage("      (A)");
+        this->isVoteBlockRfidActive = true;
+        voteBlockRfid->setCandidate('A');
+        voteBlockRfid->draw();
+//        result->a.insert("");
+//        popUpMessage("      (A)");
       }
       
       if (key == 'B') {
-        result->b++;
-        popUpMessage("      (B)");
+        this->isVoteBlockRfidActive = true;
+        voteBlockRfid->setCandidate('B');
+        voteBlockRfid->draw();
+//        result->b.insert("");
+//        popUpMessage("      (B)");
       }
       
       if (key == 'C') {
-        result->c++;
-        popUpMessage("      (C)");
+        this->isVoteBlockRfidActive = true;
+        voteBlockRfid->setCandidate('C');
+        voteBlockRfid->draw();
+//        result->c.insert("");
+//        popUpMessage("      (C)");
       }
       
       if (key == 'D') {
-        result->d++;
-        popUpMessage("      (D)");
+        this->isVoteBlockRfidActive = true;
+        voteBlockRfid->setCandidate('D');
+        voteBlockRfid->draw();
+//        result->d.insert("");
+//        popUpMessage("      (D)");
+      }
+
+      if (key == '0') {
+        return 0;
       }
       
       return 1;
     }
 
-    int processRfid(String uid) override {
+    int processRfid(const char* uid) override {
+      if (this->isVoteBlockRfidActive) {
+        int res = this->voteBlockRfid->processRfid(uid);
+        if (res == 0) {
+          this->isVoteBlockRfidActive = false;
+          this->draw();
+        }
+      }
       return 1;
     }
 
@@ -166,12 +293,12 @@ class App: public Block {
     int currentBlockIndex;
     int activeBlockIndex;
 
-    App(LiquidCrystal_I2C* lcd, MFRC522* mfrc522) {
+    App(LiquidCrystal_I2C* lcd) {
       this->name = (char*)"App Block";
       this->lcd = lcd;
       Result* result = new Result();
       this->result = result;
-      this->blocks[0] = new VoteBlock(lcd, mfrc522, result);
+      this->blocks[0] = new VoteBlock(lcd, result);
       this->blocks[1] = new ResultBlock(lcd, result);
       this->currentBlockIndex = 0;
       this->activeBlockIndex = -1;
@@ -184,13 +311,13 @@ class App: public Block {
           activeBlockIndex = -1;
           draw();
         }
-        return 0;
+        return 1;
       }
 
       if (key == '1') {
         activeBlockIndex = currentBlockIndex;
         blocks[activeBlockIndex]->draw();
-        return 0;
+        return 1;
       }
 
       if (key == 'L') {
@@ -210,11 +337,18 @@ class App: public Block {
       }
 
       draw();
-      return 0;
+      return 1;
     }
 
-    int processRfid(String uid) override {
-      return 1;
+    int processRfid(const char* uid) override {
+      if (activeBlockIndex != -1) {
+        int res = blocks[activeBlockIndex]->processRfid(uid);
+        if (res == 0) {
+          activeBlockIndex = -1;
+          draw();
+        }
+      } 
+      return 1;  
     }
 
     void draw() override {
@@ -226,12 +360,19 @@ class App: public Block {
 };
 
 // app created
-App app(&lcd, &mfrc522);
+App app(&lcd);
 
 void setup() {
 
   // Serial monitor
   Serial.begin(9600);
+
+  for (std::map<char*, char*, cmp_str>::iterator it = db.begin(); it != db.end(); it++) {
+    Serial.print(it->first);
+    Serial.print(it->second);
+  }
+
+//  Serial.println(db["a"]);
 
   // RFID init
   SPI.begin();      // Initiate  SPI bus
@@ -249,6 +390,10 @@ void setup() {
 }
 
 void loop() {
+
+  if (strcmp("a", "a")) {
+    Serial.println("Jeska\n");
+  }
 
   // read from keypad
   char key = keypad.getKey();
@@ -279,9 +424,11 @@ void loop() {
     content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
     content.concat(String(mfrc522.uid.uidByte[i], HEX));
   }
+ 
   Serial.println();
   Serial.print("Message : ");
   content.toUpperCase();
+  Serial.println("Content: " + content);
   if (content.substring(1) == "80 38 94 1A") { //change here the UID of the card/cards that you want to give access
     Serial.println("Authorized access");
     Serial.println();
@@ -290,6 +437,12 @@ void loop() {
     Serial.println("Access denied");
     //    delay(3000);
   }
+
+  char* temp = new char[12];
+  content.substring(1).toCharArray(temp, 12);
+  Serial.print("Temp = ");
+  Serial.println(temp);
+  app.processRfid(temp);
 }
 
 // welcome page
