@@ -2,13 +2,19 @@
 #include <Keypad.h>
 #include <SPI.h>
 #include <MFRC522.h>
+#include <ArduinoSTL.h>
+#include <vector>
+#include <map>
 
 
-// for LCD
+std::vector<int> vv;
+std::map<String, String> mm;
+
+// LCD configuration
 LiquidCrystal_I2C lcd(0x3F, 16, 2);
 
 
-// for Keypad
+// Keypad configuration
 const byte ROWS = 2;
 const byte COLS = 4;
 byte rowPins[ROWS] = {3, 2};
@@ -20,7 +26,7 @@ char hexaKeys[ROWS][COLS] = {
 Keypad keypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
 
 
-// for RFID card reader
+// RFID card reader configuration
 const byte SS_PIN = 10;
 const byte RST_PIN = 9;
 MFRC522 mfrc522(SS_PIN, RST_PIN);
@@ -43,7 +49,8 @@ class Result {
 class Block {
   public:
     char* name;
-    virtual int process(char key) = 0;
+    virtual int processKey(char key) = 0;
+    virtual int processRfid(String uid) = 0;
     virtual void draw() = 0;
 };
 
@@ -59,10 +66,14 @@ class ResultBlock: public Block {
       this->result = result;
     }
 
-    int process(char key) override {
+    int processKey(char key) override {
       if (key == '0') {
         return 0;
       }
+      return 1;
+    }
+
+    int processRfid(String uid) override {
       return 1;
     }
 
@@ -87,6 +98,7 @@ class VoteBlock: public Block {
     MFRC522* mfrc522;
     Result* result;
 
+
     VoteBlock(LiquidCrystal_I2C* lcd, MFRC522* mfrc522, Result* result) {
       this->name = (char*)"Vote Block";
       this->lcd = lcd;
@@ -94,26 +106,35 @@ class VoteBlock: public Block {
       this->result = result;
     }
 
-    int process(char key) override {
-      if (key == 'A') {
-        result->a++;
-        popUpMessage((char*) "      (A)");
-      }
-      if (key == 'B') {
-        result->b++;
-        popUpMessage((char*) "      (B)");
-      }
-      if (key == 'C') {
-        result->c++;
-        popUpMessage((char*) "      (C)");
-      }
-      if (key == 'D') {
-        result->d++;
-        popUpMessage((char*) "      (D)");
-      }
+    int processKey(char key) override {
       if (key == '0') {
         return 0;
       }
+      
+      if (key == 'A') {
+        result->a++;
+        popUpMessage("      (A)");
+      }
+      
+      if (key == 'B') {
+        result->b++;
+        popUpMessage("      (B)");
+      }
+      
+      if (key == 'C') {
+        result->c++;
+        popUpMessage("      (C)");
+      }
+      
+      if (key == 'D') {
+        result->d++;
+        popUpMessage("      (D)");
+      }
+      
+      return 1;
+    }
+
+    int processRfid(String uid) override {
       return 1;
     }
 
@@ -125,7 +146,7 @@ class VoteBlock: public Block {
     }
 
   private:
-    void popUpMessage(char* candidate) {
+    void popUpMessage(String candidate) {
       lcd->clear();
       lcd->print(" You voted for:");
       lcd->setCursor(0, 1);
@@ -156,9 +177,9 @@ class App: public Block {
       this->activeBlockIndex = -1;
     }
 
-    int process(char key) override {
+    int processKey(char key) override {
       if (activeBlockIndex != -1) {
-        int res = blocks[activeBlockIndex]->process(key);
+        int res = blocks[activeBlockIndex]->processKey(key);
         if (res == 0) {
           activeBlockIndex = -1;
           draw();
@@ -192,6 +213,10 @@ class App: public Block {
       return 0;
     }
 
+    int processRfid(String uid) override {
+      return 1;
+    }
+
     void draw() override {
       lcd->clear();
       lcd->print(blocks[currentBlockIndex]->name);
@@ -205,15 +230,16 @@ App app(&lcd, &mfrc522);
 
 void setup() {
 
+  // Serial monitor
   Serial.begin(9600);
 
-  // for RFID
+  // RFID init
   SPI.begin();      // Initiate  SPI bus
   mfrc522.PCD_Init();   // Initiate MFRC522
   Serial.println("Approximate your card to the reader...");
   Serial.println();
 
-  // lcd initialization
+  // lcd init
   lcd.init();
   lcd.backlight();
 
@@ -229,10 +255,10 @@ void loop() {
 
   // check keypad pressed or not
   if (keypad.keyStateChanged()) {
-    app.process(key);
+    app.processKey(key);
   }
 
-  // for RFID
+  // RFID Card Reader
   // Look for new cards
   if (!mfrc522.PICC_IsNewCardPresent()) {
     return;
@@ -259,10 +285,10 @@ void loop() {
   if (content.substring(1) == "80 38 94 1A") { //change here the UID of the card/cards that you want to give access
     Serial.println("Authorized access");
     Serial.println();
-    delay(3000);
+    //    delay(3000);
   } else {
     Serial.println("Access denied");
-    delay(3000);
+    //    delay(3000);
   }
 }
 
