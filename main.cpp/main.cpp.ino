@@ -5,35 +5,18 @@
 #include <ArduinoSTL.h>
 #include <vector>
 #include <set>
-#include <map>
-#include <utility>
-#include <iterator>
 
 
-struct cmp_str {
-   bool operator() (char const *a, char const *b) const {
-      return strcmp(a, b) < 0;
-   }
+
+// char pointer comparator for set and map
+struct compareString {
+  bool operator() (char const *a, char const *b) const {
+    return strcmp(a, b) < 0;
+  }
 };
 
 
 // Database of card and names
-std::map<char*, char*, cmp_str> db = {
-  {"a", "a_zhuma\n"}, 
-  {"b", "b_zhuma\n"},
-  {"c", "c_zhuma\n"},
-  {"d", "d_zhuma\n"},
-  {"e", "e_zhuma\n"},
-  {"f", "f_zhuma\n"},
-  {"g", "g_zhuma\n"},
-  {"h", "h_zhuma\n"},
-  {"i", "i_zhuma\n"},
-  {"j", "j_zhuma\n"},
-  {"k", "k_zhuma\n"},
-  {"l", "l_zhuma\n"},
-  {"m", "m_zhuma\n"},
-  {"n", "n_zhuma\n"}
-};
 
 
 // LCD configuration
@@ -65,10 +48,10 @@ void welcomePage(LiquidCrystal_I2C &lcd);
 // stores voting result
 class Result {
   public:
-    std::set<const char*, cmp_str> a;
-    std::set<const char*, cmp_str> b;
-    std::set<const char*, cmp_str> c;
-    std::set<const char*, cmp_str> d;
+    std::set<const char*, compareString> a;
+    std::set<const char*, compareString> b;
+    std::set<const char*, compareString> c;
+    std::set<const char*, compareString> d;
 };
 
 // abstract UI component
@@ -81,13 +64,13 @@ class Block {
 };
 
 // block for showing result
-class ResultBlock: public Block {
+class AllResultBlock: public Block {
   public:
     LiquidCrystal_I2C* lcd;
     Result* result;
 
-    ResultBlock(LiquidCrystal_I2C* lcd, Result* result) {
-      this->name = (char*)"Result Block";
+    AllResultBlock(LiquidCrystal_I2C* lcd, Result* result) {
+      this->name = (char*)"All Result";
       this->lcd = lcd;
       this->result = result;
     }
@@ -118,15 +101,432 @@ class ResultBlock: public Block {
 };
 
 
-// block VoteBlockRfid
-class VoteBlockRfid: public Block {
+// block AResultBlock
+class AResultBlock: public Block {
+  public:
+    LiquidCrystal_I2C* lcd;
+    Result* result;
+    int currentIndexOfVoter;
+
+    AResultBlock(LiquidCrystal_I2C* lcd, Result* result) {
+      this->name = (char*)"A - Result";
+      this->lcd = lcd;
+      this->result = result;
+      this->currentIndexOfVoter = 0;
+    }
+
+    int processKey(char key) override {
+      if (key == '0') {
+        return 0;
+      }
+
+      if (result->a.size() == 0) {
+        draw();
+        return 1;
+      }
+
+      if (key == 'L') {
+        if (0 < currentIndexOfVoter) {
+          currentIndexOfVoter--;
+        } else {
+          currentIndexOfVoter = result->a.size() - 1;
+        }
+      }
+
+      if (key == 'R') {
+        if (currentIndexOfVoter < result->a.size() - 1) {
+          currentIndexOfVoter++;
+        } else {
+          currentIndexOfVoter = 0;
+        }
+      }
+
+      draw();
+      return 1;
+    }
+
+    int processRfid(const char* uid) override {
+      return 1;
+    }
+
+    void draw() override {
+      lcd->clear();
+      std::set<const char*, compareString>::iterator it = result->a.begin();
+      std::advance(it, currentIndexOfVoter);
+      lcd->print(*it);
+      lcd->setCursor(0, 1);
+      lcd->print("<");
+      lcd->setCursor(5, 1);
+      lcd->print("/");
+      lcd->print(result->a.size());
+      lcd->setCursor(10, 1);
+      lcd->print(">");
+      lcd->setCursor(12, 1);
+      lcd->print("BACK");
+
+      int len = 0;
+      int temp = currentIndexOfVoter + 1;
+      while (temp) {
+        temp /= 10;
+        len++;
+      }
+      lcd->setCursor(5 - len, 1);
+
+      if (0 != result->a.size()) {
+        lcd->print(currentIndexOfVoter + 1);
+      } else {
+        lcd->print(0);
+      }
+
+      if (result->a.size() == 0) {
+        lcd->setCursor(0, 0);
+        lcd->print("No Vote!");
+      }
+    }
+};
+
+
+// block BResultBlock
+class BResultBlock: public Block {
+  public:
+    LiquidCrystal_I2C* lcd;
+    Result* result;
+    int currentIndexOfVoter;
+
+    BResultBlock(LiquidCrystal_I2C* lcd, Result* result) {
+      this->name = (char*)"B - Result";
+      this->lcd = lcd;
+      this->result = result;
+      this->currentIndexOfVoter = 0;
+    }
+
+    int processKey(char key) override {
+      if (key == '0') {
+        return 0;
+      }
+
+      if (result->b.size() == 0) {
+        draw();
+        return 1;
+      }
+
+      if (key == 'L') {
+        if (0 < currentIndexOfVoter) {
+          currentIndexOfVoter--;
+        } else {
+          currentIndexOfVoter = result->b.size() - 1;
+        }
+      }
+
+      if (key == 'R') {
+        if (currentIndexOfVoter < result->b.size() - 1) {
+          currentIndexOfVoter++;
+        } else {
+          currentIndexOfVoter = 0;
+        }
+      }
+
+      draw();
+      return 1;
+    }
+
+    int processRfid(const char* uid) override {
+      return 1;
+    }
+
+    void draw() override {
+      lcd->clear();
+      std::set<const char*, compareString>::iterator it = result->b.begin();
+      std::advance(it, currentIndexOfVoter);
+      lcd->print(*it);
+      lcd->setCursor(0, 1);
+      lcd->print("<");
+      lcd->setCursor(5, 1);
+      lcd->print("/");
+      lcd->print(result->b.size());
+      lcd->setCursor(10, 1);
+      lcd->print(">");
+      lcd->setCursor(12, 1);
+      lcd->print("BACK");
+
+      int len = 0;
+      int temp = currentIndexOfVoter + 1;
+      while (temp) {
+        temp /= 10;
+        len++;
+      }
+      lcd->setCursor(5 - len, 1);
+
+      if (0 != result->b.size()) {
+        lcd->print(currentIndexOfVoter + 1);
+      } else {
+        lcd->print(0);
+      }
+
+      if (result->b.size() == 0) {
+        lcd->setCursor(0, 0);
+        lcd->print("No Vote!");
+      }
+    }
+};
+
+
+// block CResultBlock
+class CResultBlock: public Block {
+  public:
+    LiquidCrystal_I2C* lcd;
+    Result* result;
+    int currentIndexOfVoter;
+
+    CResultBlock(LiquidCrystal_I2C* lcd, Result* result) {
+      this->name = (char*)"C - Result";
+      this->lcd = lcd;
+      this->result = result;
+      this->currentIndexOfVoter = 0;
+    }
+
+    int processKey(char key) override {
+      if (key == '0') {
+        return 0;
+      }
+
+      if (result->c.size() == 0) {
+        draw();
+        return 1;
+      }
+
+      if (key == 'L') {
+        if (0 < currentIndexOfVoter) {
+          currentIndexOfVoter--;
+        } else {
+          currentIndexOfVoter = result->c.size() - 1;
+        }
+      }
+
+      if (key == 'R') {
+        if (currentIndexOfVoter < result->c.size() - 1) {
+          currentIndexOfVoter++;
+        } else {
+          currentIndexOfVoter = 0;
+        }
+      }
+
+      draw();
+      return 1;
+    }
+
+    int processRfid(const char* uid) override {
+      return 1;
+    }
+
+    void draw() override {
+      lcd->clear();
+      std::set<const char*, compareString>::iterator it = result->c.begin();
+      std::advance(it, currentIndexOfVoter);
+      lcd->print(*it);
+      lcd->setCursor(0, 1);
+      lcd->print("<");
+      lcd->setCursor(5, 1);
+      lcd->print("/");
+      lcd->print(result->c.size());
+      lcd->setCursor(10, 1);
+      lcd->print(">");
+      lcd->setCursor(12, 1);
+      lcd->print("BACK");
+
+      int len = 0;
+      int temp = currentIndexOfVoter + 1;
+      while (temp) {
+        temp /= 10;
+        len++;
+      }
+      lcd->setCursor(5 - len, 1);
+
+      if (0 != result->c.size()) {
+        lcd->print(currentIndexOfVoter + 1);
+      } else {
+        lcd->print(0);
+      }
+
+      if (result->c.size() == 0) {
+        lcd->setCursor(0, 0);
+        lcd->print("No Vote!");
+      }
+    }
+};
+
+
+// block DResultBlock
+class DResultBlock: public Block {
+  public:
+    LiquidCrystal_I2C* lcd;
+    Result* result;
+    int currentIndexOfVoter;
+
+    DResultBlock(LiquidCrystal_I2C* lcd, Result* result) {
+      this->name = (char*)"D - Result";
+      this->lcd = lcd;
+      this->result = result;
+      this->currentIndexOfVoter = 0;
+    }
+
+    int processKey(char key) override {
+      if (key == '0') {
+        return 0;
+      }
+
+      if (result->d.size() == 0) {
+        draw();
+        return 1;
+      }
+
+      if (key == 'L') {
+        if (0 < currentIndexOfVoter) {
+          currentIndexOfVoter--;
+        } else {
+          currentIndexOfVoter = result->d.size() - 1;
+        }
+      }
+
+      if (key == 'R') {
+        if (currentIndexOfVoter < result->d.size() - 1) {
+          currentIndexOfVoter++;
+        } else {
+          currentIndexOfVoter = 0;
+        }
+      }
+
+      draw();
+      return 1;
+    }
+
+    int processRfid(const char* uid) override {
+      return 1;
+    }
+
+    void draw() override {
+      lcd->clear();
+      std::set<const char*, compareString>::iterator it = result->d.begin();
+      std::advance(it, currentIndexOfVoter);
+      lcd->print(*it);
+      lcd->setCursor(0, 1);
+      lcd->print("<");
+      lcd->setCursor(5, 1);
+      lcd->print("/");
+      lcd->print(result->d.size());
+      lcd->setCursor(10, 1);
+      lcd->print(">");
+      lcd->setCursor(12, 1);
+      lcd->print("BACK");
+
+      int len = 0;
+      int temp = currentIndexOfVoter + 1;
+      while (temp) {
+        temp /= 10;
+        len++;
+      }
+      lcd->setCursor(5 - len, 1);
+
+      if (0 != result->d.size()) {
+        lcd->print(currentIndexOfVoter + 1);
+      } else {
+        lcd->print(0);
+      }
+
+      if (result->d.size() == 0) {
+        lcd->setCursor(0, 0);
+        lcd->print("No Vote!");
+      }
+    }
+};
+
+// block IndividualResultBlock
+class IndividualResultBlock: public Block {
+  public:
+    LiquidCrystal_I2C* lcd;
+    Result* result;
+    static int const numberOfBlocks = 4;
+    Block* blocks[numberOfBlocks];
+    int currentBlockIndex;
+    int activeBlockIndex;
+
+    IndividualResultBlock(LiquidCrystal_I2C* lcd, Result* result) {
+      this->name = (char*)"Indiv. Result";
+      this->lcd = lcd;
+      this->result = result;
+
+      this->blocks[0] = new AResultBlock(lcd, result);
+      this->blocks[1] = new BResultBlock(lcd, result);
+      this->blocks[2] = new CResultBlock(lcd, result);
+      this->blocks[3] = new DResultBlock(lcd, result);
+      this->currentBlockIndex = 0;
+      this->activeBlockIndex = -1;
+    }
+
+    int processKey(char key) override {
+      if (activeBlockIndex != -1) {
+        int res = blocks[activeBlockIndex]->processKey(key);
+        if (res == 0) {
+          activeBlockIndex = -1;
+          draw();
+        }
+        return 1;
+      } else if (key == '0') {
+        return 0;
+      }
+
+      if (key == '1') {
+        activeBlockIndex = currentBlockIndex;
+        blocks[activeBlockIndex]->draw();
+        return 1;
+      }
+
+      if (key == 'L') {
+        if (0 < currentBlockIndex) {
+          currentBlockIndex--;
+        } else {
+          currentBlockIndex = numberOfBlocks - 1;
+        }
+      }
+
+      if (key == 'R') {
+        if (currentBlockIndex < numberOfBlocks - 1) {
+          currentBlockIndex++;
+        } else {
+          currentBlockIndex = 0;
+        }
+      }
+
+      draw();
+      return 1;
+    }
+
+    int processRfid(const char* uid) override {
+      return 1;
+    }
+
+    void draw() override {
+      lcd->clear();
+      // TODO: need to implement
+      lcd->print(blocks[currentBlockIndex]->name);
+      lcd->setCursor(0, 1);
+      lcd->print("OK   <  >   BACK");
+    }
+};
+
+
+
+
+
+// block VoteRfidBlock
+class VoteRfidBlock: public Block {
   public:
     LiquidCrystal_I2C* lcd;
     Result* result;
     char candidate;
 
-    VoteBlockRfid(LiquidCrystal_I2C* lcd, Result* result) {
-      this->name = (char*)"Vote Block";
+    VoteRfidBlock(LiquidCrystal_I2C* lcd, Result* result) {
+      this->name = (char*)"Vote RFID Block";
       this->lcd = lcd;
       this->result = result;
     }
@@ -143,7 +543,7 @@ class VoteBlockRfid: public Block {
     }
 
     int processRfid(const char* uid) override {
-      
+
       if (candidate == 'A') {
         this->result->a.insert(uid);
         popUpMessage(uid);
@@ -183,7 +583,7 @@ class VoteBlockRfid: public Block {
       lcd->setCursor(0, 1);
       lcd->print(candidate);
       delay(1000);
-//      draw();
+      //      draw();
     }
 };
 
@@ -193,72 +593,64 @@ class VoteBlock: public Block {
   public:
     LiquidCrystal_I2C* lcd;
     Result* result;
-    VoteBlockRfid* voteBlockRfid;
-    boolean isVoteBlockRfidActive;
+    VoteRfidBlock* voteRfidBlock;
+    boolean isVoteRfidBlockActive;
 
     VoteBlock(LiquidCrystal_I2C* lcd, Result* result) {
-      this->name = (char*)"Vote Block";
+      this->name = (char*)"Vote";
       this->lcd = lcd;
       this->result = result;
-      this->voteBlockRfid = new VoteBlockRfid(lcd, result);
-      this->isVoteBlockRfidActive = false;
+      this->voteRfidBlock = new VoteRfidBlock(lcd, result);
+      this->isVoteRfidBlockActive = false;
     }
 
     int processKey(char key) override {
 
-      if (this->isVoteBlockRfidActive) {
-        int res = this->voteBlockRfid->processKey(key);
+      if (this->isVoteRfidBlockActive) {
+        int res = this->voteRfidBlock->processKey(key);
         if (res == 0) {
           this->draw();
-          this->isVoteBlockRfidActive = false;
+          this->isVoteRfidBlockActive = false;
         }
         return 1;
       }
-      
+
       if (key == 'A') {
-        this->isVoteBlockRfidActive = true;
-        voteBlockRfid->setCandidate('A');
-        voteBlockRfid->draw();
-//        result->a.insert("");
-//        popUpMessage("      (A)");
+        this->isVoteRfidBlockActive = true;
+        voteRfidBlock->setCandidate('A');
+        voteRfidBlock->draw();
       }
-      
+
       if (key == 'B') {
-        this->isVoteBlockRfidActive = true;
-        voteBlockRfid->setCandidate('B');
-        voteBlockRfid->draw();
-//        result->b.insert("");
-//        popUpMessage("      (B)");
+        this->isVoteRfidBlockActive = true;
+        voteRfidBlock->setCandidate('B');
+        voteRfidBlock->draw();
       }
-      
+
       if (key == 'C') {
-        this->isVoteBlockRfidActive = true;
-        voteBlockRfid->setCandidate('C');
-        voteBlockRfid->draw();
-//        result->c.insert("");
-//        popUpMessage("      (C)");
+        this->isVoteRfidBlockActive = true;
+        voteRfidBlock->setCandidate('C');
+        voteRfidBlock->draw();
       }
-      
+
       if (key == 'D') {
-        this->isVoteBlockRfidActive = true;
-        voteBlockRfid->setCandidate('D');
-        voteBlockRfid->draw();
-//        result->d.insert("");
-//        popUpMessage("      (D)");
+        this->isVoteRfidBlockActive = true;
+        voteRfidBlock->setCandidate('D');
+        voteRfidBlock->draw();
       }
 
       if (key == '0') {
         return 0;
       }
-      
+
       return 1;
     }
 
     int processRfid(const char* uid) override {
-      if (this->isVoteBlockRfidActive) {
-        int res = this->voteBlockRfid->processRfid(uid);
+      if (this->isVoteRfidBlockActive) {
+        int res = this->voteRfidBlock->processRfid(uid);
         if (res == 0) {
-          this->isVoteBlockRfidActive = false;
+          this->isVoteRfidBlockActive = false;
           this->draw();
         }
       }
@@ -272,15 +664,6 @@ class VoteBlock: public Block {
       lcd->print("            BACK");
     }
 
-  private:
-    void popUpMessage(String candidate) {
-      lcd->clear();
-      lcd->print(" You voted for:");
-      lcd->setCursor(0, 1);
-      lcd->print(candidate);
-      delay(1000);
-      draw();
-    }
 };
 
 // main menu
@@ -288,7 +671,7 @@ class App: public Block {
   public:
     LiquidCrystal_I2C* lcd;
     Result* result;
-    static int const numberOfBlocks = 2;
+    static int const numberOfBlocks = 3;
     Block* blocks[numberOfBlocks];
     int currentBlockIndex;
     int activeBlockIndex;
@@ -299,7 +682,8 @@ class App: public Block {
       Result* result = new Result();
       this->result = result;
       this->blocks[0] = new VoteBlock(lcd, result);
-      this->blocks[1] = new ResultBlock(lcd, result);
+      this->blocks[1] = new AllResultBlock(lcd, result);
+      this->blocks[2] = new IndividualResultBlock(lcd, result);
       this->currentBlockIndex = 0;
       this->activeBlockIndex = -1;
     }
@@ -347,8 +731,8 @@ class App: public Block {
           activeBlockIndex = -1;
           draw();
         }
-      } 
-      return 1;  
+      }
+      return 1;
     }
 
     void draw() override {
@@ -356,6 +740,13 @@ class App: public Block {
       lcd->print(blocks[currentBlockIndex]->name);
       lcd->setCursor(0, 1);
       lcd->print("OK    <  >   ");
+
+      // set data check
+      Serial.println("Set:");
+      //      for (std::set<const char*, compareString>::iterator it = this->result->a.begin(); it != this->result->a.end(); it++) {
+      //
+      //        Serial.println(*it);
+      //      }
     }
 };
 
@@ -366,13 +757,6 @@ void setup() {
 
   // Serial monitor
   Serial.begin(9600);
-
-  for (std::map<char*, char*, cmp_str>::iterator it = db.begin(); it != db.end(); it++) {
-    Serial.print(it->first);
-    Serial.print(it->second);
-  }
-
-//  Serial.println(db["a"]);
 
   // RFID init
   SPI.begin();      // Initiate  SPI bus
@@ -389,11 +773,8 @@ void setup() {
   app.draw();
 }
 
-void loop() {
 
-  if (strcmp("a", "a")) {
-    Serial.println("Jeska\n");
-  }
+void loop() {
 
   // read from keypad
   char key = keypad.getKey();
@@ -418,13 +799,15 @@ void loop() {
   Serial.print("UID tag :");
   String content = "";
   byte letter;
+  Serial.print("\nSize: ");
+  Serial.println(mfrc522.uid.size);
   for (int i = 0; i < mfrc522.uid.size; i++) {
     Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
     Serial.print(mfrc522.uid.uidByte[i], HEX);
     content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
     content.concat(String(mfrc522.uid.uidByte[i], HEX));
   }
- 
+
   Serial.println();
   Serial.print("Message : ");
   content.toUpperCase();
@@ -438,12 +821,14 @@ void loop() {
     //    delay(3000);
   }
 
-  char* temp = new char[12];
+  char *temp = new char[12];
   content.substring(1).toCharArray(temp, 12);
   Serial.print("Temp = ");
   Serial.println(temp);
   app.processRfid(temp);
+  //  delete temp;
 }
+
 
 // welcome page
 void welcomePage(LiquidCrystal_I2C &lcd) {
