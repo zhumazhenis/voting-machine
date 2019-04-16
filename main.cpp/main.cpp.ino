@@ -510,12 +510,14 @@ class IndividualResultBlock: public Block {
       // TODO: need to implement
       lcd->print(blocks[currentBlockIndex]->name);
       lcd->setCursor(0, 1);
-      lcd->print("OK   <  >   BACK");
+      lcd->print("OK <     >  BACK");
+      lcd->setCursor(6, 1);
+      lcd->print("/");
+      lcd->print(numberOfBlocks);
+      lcd->setCursor(5, 1);
+      lcd->print(currentBlockIndex + 1);
     }
 };
-
-
-
 
 
 // block VoteRfidBlock
@@ -583,7 +585,6 @@ class VoteRfidBlock: public Block {
       lcd->setCursor(0, 1);
       lcd->print(candidate);
       delay(1000);
-      //      draw();
     }
 };
 
@@ -739,14 +740,12 @@ class App: public Block {
       lcd->clear();
       lcd->print(blocks[currentBlockIndex]->name);
       lcd->setCursor(0, 1);
-      lcd->print("OK    <  >   ");
-
-      // set data check
-      Serial.println("Set:");
-      //      for (std::set<const char*, compareString>::iterator it = this->result->a.begin(); it != this->result->a.end(); it++) {
-      //
-      //        Serial.println(*it);
-      //      }
+      lcd->print("OK   <     >    ");
+      lcd->setCursor(8, 1);
+      lcd->print("/");
+      lcd->print(numberOfBlocks);
+      lcd->setCursor(7, 1);
+      lcd->print(currentBlockIndex + 1);
     }
 };
 
