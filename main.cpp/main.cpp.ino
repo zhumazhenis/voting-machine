@@ -20,7 +20,8 @@ struct compareString {
 // Database of card and names
 
 std::map<const char*, const char*, compareString> db = {
-  {"60 80 FA A7", "Vipin K."}  
+  {"E3 8C 87 C9", "Zhumazhenis D."},
+  {"80 38 94 1A", "Bekassyl S."}
 };
 
 
@@ -161,7 +162,7 @@ class AResultBlock: public Block {
       std::set<const char*, compareString>::iterator it = result->a.begin();
       std::advance(it, currentIndexOfVoter);
       lcd->print((*db)[*it]);
-//      lcd->print(*it);
+      //      lcd->print(*it);
       lcd->setCursor(0, 1);
       lcd->print("<");
       lcd->setCursor(5, 1);
@@ -564,23 +565,79 @@ class VoteRfidBlock: public Block {
     int processRfid(const char* uid) override {
 
       if (candidate == 'A') {
-        this->result->a.insert(uid);
-        popUpMessage(uid);
+        // 0 = not allowed
+        // 1 = already voted
+        // 2 = successful
+        int type = 0;
+        if (db->find(uid) == db->end()) {
+          type = 0;
+        } else if (result->a.find(uid) != result->a.end() ||
+                   result->b.find(uid) != result->b.end() ||
+                   result->c.find(uid) != result->c.end() ||
+                   result->d.find(uid) != result->d.end()) {
+          type = 1;
+        } else {
+          type = 2;
+          result->a.insert(uid);
+        }
+        popUpMessage(uid, type);
       }
 
       if (candidate == 'B') {
-        this->result->b.insert(uid);
-        popUpMessage(uid);
+        // 0 = not allowed
+        // 1 = already voted
+        // 2 = successful
+        int type = 0;
+        if (db->find(uid) == db->end()) {
+          type = 0;
+        } else if (result->a.find(uid) != result->a.end() ||
+                   result->b.find(uid) != result->b.end() ||
+                   result->c.find(uid) != result->c.end() ||
+                   result->d.find(uid) != result->d.end()) {
+          type = 1;
+        } else {
+          type = 2;
+          this->result->b.insert(uid);
+        }
+        popUpMessage(uid, type);
       }
 
       if (candidate == 'C') {
-        this->result->c.insert(uid);
-        popUpMessage(uid);
+        // 0 = not allowed
+        // 1 = already voted
+        // 2 = successful
+        int type = 0;
+        if (db->find(uid) == db->end()) {
+          type = 0;
+        } else if (result->a.find(uid) != result->a.end() ||
+                   result->b.find(uid) != result->b.end() ||
+                   result->c.find(uid) != result->c.end() ||
+                   result->d.find(uid) != result->d.end()) {
+          type = 1;
+        } else {
+          type = 2;
+          this->result->c.insert(uid);
+        }
+        popUpMessage(uid, type);
       }
 
       if (candidate == 'D') {
-        this->result->d.insert(uid);
-        popUpMessage(uid);
+        // 0 = not allowed
+        // 1 = already voted
+        // 2 = successful
+        int type = 0;
+        if (db->find(uid) == db->end()) {
+          type = 0;
+        } else if (result->a.find(uid) != result->a.end() ||
+                   result->b.find(uid) != result->b.end() ||
+                   result->c.find(uid) != result->c.end() ||
+                   result->d.find(uid) != result->d.end()) {
+          type = 1;
+        } else {
+          type = 2;
+          this->result->d.insert(uid);
+        }
+        popUpMessage(uid, type);
       }
       return 0;
     }
@@ -596,11 +653,23 @@ class VoteRfidBlock: public Block {
     }
 
   private:
-    void popUpMessage(const char* uid) {
+    void popUpMessage(const char* uid, int type) {
       lcd->clear();
-      lcd->print((*db)[uid]);
-      lcd->setCursor(0, 1);
-      lcd->print(candidate);
+
+      if (type == 0) {
+        lcd->print("ERROR! Not found");
+        lcd->setCursor(0, 1);
+        lcd->print("in database");
+      } else if (type == 1) {
+        lcd->print("ERROR! Already");
+        lcd->setCursor(0, 1);
+        lcd->print("voted");
+      } else if (type == 2) {
+        lcd->print("Succeed! Voted");
+        lcd->setCursor(0, 1);
+        lcd->print(candidate);
+      }
+
       delay(1000);
     }
 };
@@ -774,7 +843,7 @@ App app(&lcd, &db);
 
 void setup() {
 
-  
+
 
   // Serial monitor
   Serial.begin(9600);
@@ -835,15 +904,6 @@ void loop() {
   Serial.println();
   Serial.print("Message : ");
   content.toUpperCase();
-  Serial.println("Content: " + content);
-  if (content.substring(1) == "80 38 94 1A") { //change here the UID of the card/cards that you want to give access
-    Serial.println("Authorized access");
-    Serial.println();
-    //    delay(3000);
-  } else {
-    Serial.println("Access denied");
-    //    delay(3000);
-  }
 
   char *temp = new char[12];
   content.substring(1).toCharArray(temp, 12);
