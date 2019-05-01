@@ -5,6 +5,7 @@
 #include <ArduinoSTL.h>
 #include <vector>
 #include <set>
+#include <map>
 
 
 
@@ -17,6 +18,10 @@ struct compareString {
 
 
 // Database of card and names
+
+std::map<const char*, const char*, compareString> db = {
+  {"60 80 FA A7", "Vipin K."}  
+};
 
 
 // LCD configuration
@@ -107,10 +112,12 @@ class AResultBlock: public Block {
     LiquidCrystal_I2C* lcd;
     Result* result;
     int currentIndexOfVoter;
+    std::map<const char*, const char*, compareString> *db;
 
-    AResultBlock(LiquidCrystal_I2C* lcd, Result* result) {
+    AResultBlock(LiquidCrystal_I2C* lcd, Result* result, std::map<const char*, const char*, compareString> *db) {
       this->name = (char*)"A - Result";
       this->lcd = lcd;
+      this->db = db;
       this->result = result;
       this->currentIndexOfVoter = 0;
     }
@@ -153,7 +160,8 @@ class AResultBlock: public Block {
       lcd->clear();
       std::set<const char*, compareString>::iterator it = result->a.begin();
       std::advance(it, currentIndexOfVoter);
-      lcd->print(*it);
+      lcd->print((*db)[*it]);
+//      lcd->print(*it);
       lcd->setCursor(0, 1);
       lcd->print("<");
       lcd->setCursor(5, 1);
@@ -190,12 +198,14 @@ class AResultBlock: public Block {
 class BResultBlock: public Block {
   public:
     LiquidCrystal_I2C* lcd;
+    std::map<const char*, const char*, compareString> *db;
     Result* result;
     int currentIndexOfVoter;
 
-    BResultBlock(LiquidCrystal_I2C* lcd, Result* result) {
+    BResultBlock(LiquidCrystal_I2C* lcd, Result* result, std::map<const char*, const char*, compareString> *db) {
       this->name = (char*)"B - Result";
       this->lcd = lcd;
+      this->db = db;
       this->result = result;
       this->currentIndexOfVoter = 0;
     }
@@ -238,7 +248,7 @@ class BResultBlock: public Block {
       lcd->clear();
       std::set<const char*, compareString>::iterator it = result->b.begin();
       std::advance(it, currentIndexOfVoter);
-      lcd->print(*it);
+      lcd->print((*db)[*it]);
       lcd->setCursor(0, 1);
       lcd->print("<");
       lcd->setCursor(5, 1);
@@ -275,12 +285,14 @@ class BResultBlock: public Block {
 class CResultBlock: public Block {
   public:
     LiquidCrystal_I2C* lcd;
+    std::map<const char*, const char*, compareString> *db;
     Result* result;
     int currentIndexOfVoter;
 
-    CResultBlock(LiquidCrystal_I2C* lcd, Result* result) {
+    CResultBlock(LiquidCrystal_I2C* lcd, Result* result, std::map<const char*, const char*, compareString> *db) {
       this->name = (char*)"C - Result";
       this->lcd = lcd;
+      this->db = db;
       this->result = result;
       this->currentIndexOfVoter = 0;
     }
@@ -323,7 +335,7 @@ class CResultBlock: public Block {
       lcd->clear();
       std::set<const char*, compareString>::iterator it = result->c.begin();
       std::advance(it, currentIndexOfVoter);
-      lcd->print(*it);
+      lcd->print((*db)[*it]);
       lcd->setCursor(0, 1);
       lcd->print("<");
       lcd->setCursor(5, 1);
@@ -360,12 +372,14 @@ class CResultBlock: public Block {
 class DResultBlock: public Block {
   public:
     LiquidCrystal_I2C* lcd;
+    std::map<const char*, const char*, compareString> *db;
     Result* result;
     int currentIndexOfVoter;
 
-    DResultBlock(LiquidCrystal_I2C* lcd, Result* result) {
+    DResultBlock(LiquidCrystal_I2C* lcd, Result* result, std::map<const char*, const char*, compareString> *db) {
       this->name = (char*)"D - Result";
       this->lcd = lcd;
+      this->db = db;
       this->result = result;
       this->currentIndexOfVoter = 0;
     }
@@ -408,7 +422,7 @@ class DResultBlock: public Block {
       lcd->clear();
       std::set<const char*, compareString>::iterator it = result->d.begin();
       std::advance(it, currentIndexOfVoter);
-      lcd->print(*it);
+      lcd->print((*db)[*it]);
       lcd->setCursor(0, 1);
       lcd->print("<");
       lcd->setCursor(5, 1);
@@ -444,21 +458,22 @@ class DResultBlock: public Block {
 class IndividualResultBlock: public Block {
   public:
     LiquidCrystal_I2C* lcd;
+    std::map<const char*, const char*, compareString> *db;
     Result* result;
     static int const numberOfBlocks = 4;
     Block* blocks[numberOfBlocks];
     int currentBlockIndex;
     int activeBlockIndex;
 
-    IndividualResultBlock(LiquidCrystal_I2C* lcd, Result* result) {
+    IndividualResultBlock(LiquidCrystal_I2C* lcd, Result* result, std::map<const char*, const char*, compareString> *db) {
       this->name = (char*)"Indiv. Result";
       this->lcd = lcd;
       this->result = result;
-
-      this->blocks[0] = new AResultBlock(lcd, result);
-      this->blocks[1] = new BResultBlock(lcd, result);
-      this->blocks[2] = new CResultBlock(lcd, result);
-      this->blocks[3] = new DResultBlock(lcd, result);
+      this->db = db;
+      this->blocks[0] = new AResultBlock(lcd, result, db);
+      this->blocks[1] = new BResultBlock(lcd, result, db);
+      this->blocks[2] = new CResultBlock(lcd, result, db);
+      this->blocks[3] = new DResultBlock(lcd, result, db);
       this->currentBlockIndex = 0;
       this->activeBlockIndex = -1;
     }
@@ -524,12 +539,14 @@ class IndividualResultBlock: public Block {
 class VoteRfidBlock: public Block {
   public:
     LiquidCrystal_I2C* lcd;
+    std::map<const char*, const char*, compareString> *db;
     Result* result;
     char candidate;
 
-    VoteRfidBlock(LiquidCrystal_I2C* lcd, Result* result) {
+    VoteRfidBlock(LiquidCrystal_I2C* lcd, Result* result, std::map<const char*, const char*, compareString> *db) {
       this->name = (char*)"Vote RFID Block";
       this->lcd = lcd;
+      this->db = db;
       this->result = result;
     }
 
@@ -581,7 +598,7 @@ class VoteRfidBlock: public Block {
   private:
     void popUpMessage(const char* uid) {
       lcd->clear();
-      lcd->print(uid);
+      lcd->print((*db)[uid]);
       lcd->setCursor(0, 1);
       lcd->print(candidate);
       delay(1000);
@@ -593,15 +610,16 @@ class VoteRfidBlock: public Block {
 class VoteBlock: public Block {
   public:
     LiquidCrystal_I2C* lcd;
+    std::map<const char*, const char*> *db;
     Result* result;
     VoteRfidBlock* voteRfidBlock;
     boolean isVoteRfidBlockActive;
 
-    VoteBlock(LiquidCrystal_I2C* lcd, Result* result) {
+    VoteBlock(LiquidCrystal_I2C* lcd, Result* result, std::map<const char*, const char*, compareString> *db) {
       this->name = (char*)"Vote";
       this->lcd = lcd;
       this->result = result;
-      this->voteRfidBlock = new VoteRfidBlock(lcd, result);
+      this->voteRfidBlock = new VoteRfidBlock(lcd, result, db);
       this->isVoteRfidBlockActive = false;
     }
 
@@ -671,20 +689,22 @@ class VoteBlock: public Block {
 class App: public Block {
   public:
     LiquidCrystal_I2C* lcd;
+    std::map<const char*, const char*, compareString> *db;
     Result* result;
     static int const numberOfBlocks = 3;
     Block* blocks[numberOfBlocks];
     int currentBlockIndex;
     int activeBlockIndex;
 
-    App(LiquidCrystal_I2C* lcd) {
+    App(LiquidCrystal_I2C* lcd, std::map<const char*, const char*, compareString> *db) {
       this->name = (char*)"App Block";
       this->lcd = lcd;
+      this->db = db;
       Result* result = new Result();
       this->result = result;
-      this->blocks[0] = new VoteBlock(lcd, result);
+      this->blocks[0] = new VoteBlock(lcd, result, db);
       this->blocks[1] = new AllResultBlock(lcd, result);
-      this->blocks[2] = new IndividualResultBlock(lcd, result);
+      this->blocks[2] = new IndividualResultBlock(lcd, result, db);
       this->currentBlockIndex = 0;
       this->activeBlockIndex = -1;
     }
@@ -750,12 +770,17 @@ class App: public Block {
 };
 
 // app created
-App app(&lcd);
+App app(&lcd, &db);
 
 void setup() {
 
+  
+
   // Serial monitor
   Serial.begin(9600);
+
+  Serial.println("Kazakhstan");
+  Serial.println(db["beka"]);
 
   // RFID init
   SPI.begin();      // Initiate  SPI bus
