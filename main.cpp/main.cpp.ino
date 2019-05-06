@@ -3,7 +3,11 @@
 
 
 // for LCD
-const int rs = 2, en = 3, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
+const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+
+// const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+
+//const int rs = 2, en = 3, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 // for Keypad
